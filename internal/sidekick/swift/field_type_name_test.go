@@ -333,6 +333,38 @@ func TestFieldTypeName_ExternalMessage(t *testing.T) {
 	}
 }
 
+func TestFieldTypeName_ExternalMessageSameTargetLibrary(t *testing.T) {
+	externalMessage := api.NewTestMessage("Value").
+		WithPackage(wellKnownProtobufPackage)
+
+	model := api.NewTestAPI([]*api.Message{externalMessage}, nil, nil).
+		WithPackageName("google.cloud.test.v1")
+	c := newTestCodec(t, model, &config.Library{
+		Swift: &config.SwiftPackage{
+			LibraryNameOverride: "MySingleTarget",
+			SwiftDefault: config.SwiftDefault{
+				Dependencies: []config.SwiftDependency{
+					{
+						ApiPackage: wellKnownProtobufPackage,
+						Name:       "MySingleTarget",
+					},
+				},
+			},
+		},
+	})
+	ann := &modelAnnotations{DependsOn: map[string]*Dependency{}}
+	c.Model.Codec = ann
+
+	got, err := c.messageTypeName(externalMessage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "WKTValue"
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestFieldTypeName_ExternalEnum(t *testing.T) {
 	externalEnum := api.NewTestEnum("ExternalEnum").
 		WithPackage("google.cloud.external.v1")

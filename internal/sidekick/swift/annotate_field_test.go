@@ -361,3 +361,36 @@ func TestAnnotateField_Recursive(t *testing.T) {
 		})
 	}
 }
+
+func TestAnnotateField_RecursiveSameModuleWkt(t *testing.T) {
+	msg := api.NewTestMessage("Schema").WithPackage("google.ai.generativelanguage.v1beta")
+	field := api.NewTestField("items").
+		WithMessageType(msg).
+		WithOptional().
+		WithRecursive()
+	msg.WithFields(field)
+
+	model := api.NewTestAPI([]*api.Message{msg}, nil, nil).
+		WithPackageName("google.ai.generativelanguage.v1beta")
+	codec := newTestCodec(t, model, &config.Library{
+		Swift: &config.SwiftPackage{
+			LibraryNameOverride: "GeminiAPIDataModels",
+			SwiftDefault: config.SwiftDefault{
+				Dependencies: []config.SwiftDependency{
+					{ApiPackage: wellKnownProtobufPackage, Name: "GeminiAPIDataModels"},
+				},
+			},
+		},
+	})
+	if err := codec.annotateModel(); err != nil {
+		t.Fatal(err)
+	}
+
+	got := field.Codec.(*fieldAnnotations)
+	if got.FieldType != "WKTRecursive<Schema>?" {
+		t.Errorf("got FieldType = %q, want %q", got.FieldType, "WKTRecursive<Schema>?")
+	}
+	if got.BaseFieldType != "WKTRecursive<Schema>" {
+		t.Errorf("got BaseFieldType = %q, want %q", got.BaseFieldType, "WKTRecursive<Schema>")
+	}
+}

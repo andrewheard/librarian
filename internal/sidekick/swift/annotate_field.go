@@ -206,7 +206,7 @@ func (c *codec) annotateField(field *api.Field, model *modelAnnotations) (*field
 	//    automatically using the native indirect case mechanism.
 	if field.Recursive && field.Singular() && !field.IsOneOf {
 		annotations.Recursive = true
-		annotations.BaseFieldType = fmt.Sprintf("%s.WKTRecursive<%s>", wellKnownSwiftPackage, parts.Base)
+		annotations.BaseFieldType = fmt.Sprintf("%sWKTRecursive<%s>", model.WktPrefix, parts.Base)
 		annotations.FieldType = annotations.BaseFieldType + "?"
 		annotations.Decoding = DecodingOptional
 	}

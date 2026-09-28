@@ -234,7 +234,10 @@ func (c *codec) externalTypePrefix(packageName string) (string, error) {
 		}
 		return "", fmt.Errorf("package %q not found in ApiPackages", packageName)
 	}
-	if packageName == c.Model.PackageName && (!c.Module || c.TargetLibraryName == dep.Name) {
+	if c.TargetLibraryName != "" && dep.Name == c.TargetLibraryName {
+		return "", nil
+	}
+	if packageName == c.Model.PackageName && !c.Module {
 		return "", nil
 	}
 	return dep.Name, nil
