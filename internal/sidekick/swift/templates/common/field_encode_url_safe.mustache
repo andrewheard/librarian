@@ -17,26 +17,26 @@ limitations under the License.
 {{#Optional}}
 if let v = {{Codec.Name}} {
     try container.encode(
-    {{Codec.Model.WktPackage}}._DiscoveryBase64.encode(v), forKey: .{{Codec.Name}}
+    {{Codec.Model.WktPrefix}}_DiscoveryBase64.encode(v), forKey: .{{Codec.Name}}
     )
 }
 {{/Optional}}
 {{^Optional}}
 try container.encode(
-  {{Codec.Model.WktPackage}}._DiscoveryBase64.encode({{Codec.Name}}), forKey: .{{Codec.Name}}
+  {{Codec.Model.WktPrefix}}_DiscoveryBase64.encode({{Codec.Name}}), forKey: .{{Codec.Name}}
 )
 {{/Optional}}
 {{/Singular}}
 {{#Repeated}}
 try container.encode(
-  {{Codec.Name}}.map { {{Codec.Model.WktPackage}}._DiscoveryBase64.encode($0) }, forKey: .{{Codec.Name}}
+  {{Codec.Name}}.map { {{Codec.Model.WktPrefix}}_DiscoveryBase64.encode($0) }, forKey: .{{Codec.Name}}
 )
 {{/Repeated}}
 {{#Map}}
 {{! Discovery-based services only have string-key maps, we only need to map the values }}
 do {
   let transformed = self.{{Codec.Name}}.mapValues {
-    {{Codec.Model.WktPackage}}._DiscoveryBase64.encode($0)
+    {{Codec.Model.WktPrefix}}_DiscoveryBase64.encode($0)
   }
   try container.encode(transformed, forKey: .{{Codec.Name}})
 }

@@ -39,9 +39,36 @@ func TestModelAnnotations(t *testing.T) {
 		CopyrightYear:   "2038",
 		MonorepoRoot:    ".",
 		WktPackage:      "GoogleWKT",
+		WktPrefix:       "GoogleWKT.",
 	}
 	if diff := cmp.Diff(want, model.Codec, cmpopts.IgnoreFields(modelAnnotations{}, "BoilerPlate", "DependsOn")); diff != "" {
 		t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestModelAnnotations_WktSameModule(t *testing.T) {
+	msg := api.NewTestMessage("Request").WithPackage("google.ai.generativelanguage.v1beta")
+	model := api.NewTestAPI([]*api.Message{msg}, nil, nil).
+		WithPackageName("google.ai.generativelanguage.v1beta")
+	codec := newTestCodec(t, model, &config.Library{
+		Swift: &config.SwiftPackage{
+			LibraryNameOverride: "GeminiAPIDataModels",
+			SwiftDefault: config.SwiftDefault{
+				Dependencies: []config.SwiftDependency{
+					{ApiPackage: wellKnownProtobufPackage, Name: "GeminiAPIDataModels"},
+				},
+			},
+		},
+	})
+	if err := codec.annotateModel(); err != nil {
+		t.Fatal(err)
+	}
+	ann := model.Codec.(*modelAnnotations)
+	if ann.WktPackage != "GeminiAPIDataModels" {
+		t.Errorf("got WktPackage = %q, want %q", ann.WktPackage, "GeminiAPIDataModels")
+	}
+	if ann.WktPrefix != "" {
+		t.Errorf("got WktPrefix = %q, want empty string", ann.WktPrefix)
 	}
 }
 

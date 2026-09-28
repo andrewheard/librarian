@@ -18,11 +18,25 @@ limitations under the License.
 try container.encodeIfPresent(self.{{Codec.Name}}, forKey: .{{Codec.Name}})
 {{/Optional}}
 {{^Optional}}
+{{#Repeated}}
+if !self.{{Codec.Name}}.isEmpty {
+  try container.encode(self.{{Codec.Name}}, forKey: .{{Codec.Name}})
+}
+{{/Repeated}}
+{{#Map}}
+if !self.{{Codec.Name}}.isEmpty {
+  try container.encode(self.{{Codec.Name}}, forKey: .{{Codec.Name}})
+}
+{{/Map}}
+{{^Repeated}}
+{{^Map}}
 try container.encode(self.{{Codec.Name}}, forKey: .{{Codec.Name}})
+{{/Map}}
+{{/Repeated}}
 {{/Optional}}
 {{/Codec.IsEncodingSimple}}
 {{#Codec.IsEncodingMapCustomKey}}
-do {
+if !self.{{Codec.Name}}.isEmpty {
   let stringKeyed = Dictionary(
     uniqueKeysWithValues: self.{{Codec.Name}}.lazy.map { (Swift.String($0), $1) }
   )

@@ -82,6 +82,80 @@ func TestGenerateField_InitFromDecoder(t *testing.T) {
 	}
 }
 
+func TestGenerateField_EncodeToEncoder(t *testing.T) {
+	outDir := t.TempDir()
+
+	strMapEntry := api.NewTestMapMessage("StrMapEntry", api.TypezString, api.TypezString).
+		WithPackage("google.cloud.test.v1").
+		WithID(".google.cloud.test.v1.TestMessage.StrMapEntry")
+	intMapEntry := api.NewTestMapMessage("IntMapEntry", api.TypezInt32, api.TypezString).
+		WithPackage("google.cloud.test.v1").
+		WithID(".google.cloud.test.v1.TestMessage.IntMapEntry")
+
+	normalField := api.NewTestField("normal_field").
+		WithType(api.TypezString)
+	optionalField := api.NewTestField("optional_field").
+		WithType(api.TypezString).
+		WithOptional()
+	repeatedField := api.NewTestField("repeated_field").
+		WithType(api.TypezString).
+		WithRepeated()
+	mapField := api.NewTestField("map_field").
+		WithMessageType(strMapEntry).
+		WithMap()
+	customKeyMapField := api.NewTestField("custom_key_map_field").
+		WithMessageType(intMapEntry).
+		WithMap()
+
+	msg := api.NewTestMessage("TestMessage").
+		WithPackage("google.cloud.test.v1").
+		WithFields(normalField, optionalField, repeatedField, mapField, customKeyMapField)
+
+	model := api.NewTestAPI([]*api.Message{msg}, nil, nil)
+	model.AddMessage(strMapEntry)
+	model.AddMessage(intMapEntry)
+
+	library := &config.Library{
+		Swift: swiftConfig(t, nil),
+	}
+	if err := Generate(t.Context(), model, outDir, library, nil); err != nil {
+		t.Fatal(err)
+	}
+
+	filename := filepath.Join(outDir, "Sources", "GoogleCloudTestV1", "TestMessage.swift")
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
+	contentStr := string(content)
+
+	gotBlock := extractBlock(t, contentStr, "  public func encode(to encoder: Encoder) throws {", "\n  }")
+	wantBlock := `  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(self.normalField, forKey: .normalField)
+    try container.encodeIfPresent(self.optionalField, forKey: .optionalField)
+    if !self.repeatedField.isEmpty {
+      try container.encode(self.repeatedField, forKey: .repeatedField)
+    }
+    if !self.mapField.isEmpty {
+      try container.encode(self.mapField, forKey: .mapField)
+    }
+    if !self.customKeyMapField.isEmpty {
+      let stringKeyed = Dictionary(
+        uniqueKeysWithValues: self.customKeyMapField.lazy.map { (Swift.String($0), $1) }
+      )
+      try container.encode(stringKeyed, forKey: .customKeyMapField)
+    }
+    for (key, value) in self._unknownFields.json {
+      try container.encode(value, forKey: CodingKeys(stringValue: key))
+    }
+  }`
+
+	if diff := cmp.Diff(wantBlock, gotBlock); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
+}
+
 func TestGenerateField_DocComments(t *testing.T) {
 	outDir := t.TempDir()
 

@@ -15,7 +15,7 @@ limitations under the License.
 }}
 {{#Singular}}
 if let s = try container.decodeIfPresent(Swift.String.self, forKey: .{{Codec.Name}}) {
-  guard let v = {{Codec.Model.WktPackage}}._DiscoveryBase64.decode(s) else {
+  guard let v = {{Codec.Model.WktPrefix}}_DiscoveryBase64.decode(s) else {
     throw DecodingError.dataCorrupted(
       DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Expected url-safe encoded value")
     )
@@ -26,7 +26,7 @@ if let s = try container.decodeIfPresent(Swift.String.self, forKey: .{{Codec.Nam
 {{#Repeated}}
 if let strings = try container.decodeIfPresent([Swift.String].self, forKey: .{{Codec.Name}}) {
   self.{{Codec.Name}} = try strings.map {
-    guard let v = {{Codec.Model.WktPackage}}._DiscoveryBase64.decode($0) else {
+    guard let v = {{Codec.Model.WktPrefix}}_DiscoveryBase64.decode($0) else {
       throw DecodingError.dataCorrupted(
         DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Expected url-safe encoded value")
       )
@@ -39,7 +39,7 @@ if let strings = try container.decodeIfPresent([Swift.String].self, forKey: .{{C
 {{! Discovery-based services only have string-key maps, we only need to map the values }}
 if let strings = try container.decodeIfPresent([Swift.String:Swift.String].self, forKey: .{{Codec.Name}}) {
   self.{{Codec.Name}} = try strings.mapValues {
-    guard let v = {{Codec.Model.WktPackage}}._DiscoveryBase64.decode($0) else {
+    guard let v = {{Codec.Model.WktPrefix}}_DiscoveryBase64.decode($0) else {
       throw DecodingError.dataCorrupted(
         DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Expected url-safe encoded value")
       )

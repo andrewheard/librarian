@@ -40,6 +40,7 @@ type modelAnnotations struct {
 	MonorepoRoot     string
 	DependsOn        map[string]*Dependency
 	WktPackage       string
+	WktPrefix        string
 	PerServiceTraits bool
 	DefaultTraits    []string
 	AllTraits        []*traitDefinition
@@ -157,6 +158,9 @@ func (c *codec) annotateModel() error {
 	}
 	if dep, ok := c.ApiPackages[wellKnownProtobufPackage]; ok {
 		annotations.WktPackage = dep.Name
+	}
+	if annotations.WktPackage != "" && annotations.WktPackage != c.TargetLibraryName {
+		annotations.WktPrefix = annotations.WktPackage + "."
 	}
 	c.Model.Codec = annotations
 	for _, message := range c.Model.Messages {
